@@ -1,0 +1,86 @@
+function [X_x,Y_y,Z_z,A_1,B_1,C_1,A_2,B_2,C_2]=Trellis_tran(A1,B1,C1,A2,B2,C2,xx,yy,zz,salesmen,mxyindex,mV_out,path_Len)
+% load path.mat;
+% load x_x.mat;
+% load y_y.mat;
+% load z_Z.mat;
+% load A1.mat;
+% load B1.mat;
+% load C1.mat;
+% load A2.mat;
+% load B2.mat;
+% load C2.mat;
+% salesmen=3;
+% mxyindex=7;
+% mV_out=16;
+Short_L_reg=zeros(1,mV_out);
+index=zeros(1,mV_out,(mxyindex-1),2*salesmen);
+for i=1:2*salesmen
+[Short_L_reg(1,:,1,i),index(1,:,1,i)]=min(path_Len(:,:,1,i),[],1);
+end
+
+for i = 1:2*salesmen
+    for j=2:(mxyindex-1)
+        reg = repmat(Short_L_reg(1,:,1,i)',1,mV_out);
+        path_Len(:,:,j,i) = reg + path_Len(:,:,j,i);
+        [Short_L_reg(1,:,1,i),index(1,:,j,i)] = min(path_Len(:,:,j,i));
+    end
+end
+
+[Short_l_reg(1:2*salesmen),index1(1:2*salesmen)]=min(Short_L_reg(:,:,1,1:2*salesmen));
+
+Short_l_reg(2,1:salesmen)=Short_l_reg(1,(salesmen+1):2*salesmen);
+Short_l_reg(:,(salesmen+1):2*salesmen)=[];
+ [Sh,index_sh]=min(Short_l_reg,[],1);
+ for i=1:salesmen
+     
+ index_tar(i)=(index_sh(1,i)-1)*salesmen+i;
+ end
+ 
+ index_1=index1(index_tar);
+ for i=1:salesmen
+     PAth_Len(i)=Short_L_reg(:,index_1(1,i),1,index_tar(1,i));
+ end
+ 
+ Path_Len=sum(PAth_Len,2);
+ H=zeros((mxyindex-1),salesmen);
+ for i=1:salesmen
+
+     H((mxyindex-1),i)=index(:,index_1(i),(mxyindex-1),index_tar(1,i));
+ end
+ R=H((mxyindex-1),:);
+%      for j=1:salesmen
+%          h.h{(mxyindex-1),j}=[H(j) index_tar(j)];
+%      end
+%
+for j=(mxyindex-2):-1:1
+    for ii=1:salesmen
+        H(j,ii)=index(:,R(1,ii),j,index_tar(1,ii));
+    end
+    R=H(j,:);
+end
+
+
+L=[H(2:(mxyindex-1),:);index_1];
+
+for i=1:salesmen
+    for ii=1:(mxyindex-1)
+        n=(H(ii,i)-1)*mV_out+L(ii,i);
+        X_x(ii,:,i)=xx(n,:,ii,index_tar(i));
+        Y_y(ii,:,i)=yy(n,:,ii,index_tar(i));
+        Z_z(ii,:,i)=zz(n,:,ii,index_tar(i));
+        A_1(ii,:,i)=A1(n,:,ii,index_tar(i));
+        B_1(ii,:,i)=B1(n,:,ii,index_tar(i));
+        C_1(ii,:,i)=C1(n,:,ii,index_tar(i));
+        A_2(ii,:,i)=A2(n,:,ii,index_tar(i));
+        B_2(ii,:,i)=B2(n,:,ii,index_tar(i));
+        C_2(ii,:,i)=C2(n,:,ii,index_tar(i));
+    end
+end
+
+
+
+
+ 
+end
+
+ 
